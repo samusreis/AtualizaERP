@@ -110,6 +110,9 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 900, 900)
 
         self.automation_worker = AutomationWorker()
+        self._pending_completion_message = None
+        self._task_failed = False
+        self._generated_commit_message = ""
         self.automation_worker.log_message.connect(self.append_to_log)
         self.automation_worker.task_finished.connect(self.on_task_finished)
         self.automation_worker.task_error.connect(self.show_error_message)
@@ -227,9 +230,15 @@ class MainWindow(QMainWindow):
         self.log_output.moveCursor(QTextCursor.End)
 
     def on_task_finished(self):
+        completion_message = self._pending_completion_message
+        self._pending_completion_message = None
+        if completion_message and not self._task_failed:
+            QMessageBox.information(self, "Etapa concluída", completion_message)
+        self._task_failed = False
         self._set_buttons_enabled(True)
 
     def show_error_message(self, title, message):
+        self._task_failed = True
         QMessageBox.critical(self, title, message)
         self._set_buttons_enabled(True)
 
@@ -300,6 +309,17 @@ class MainWindow(QMainWindow):
         filepath, _ = QFileDialog.getOpenFileName(self, "Selecionar Arquivo de Pacote", "", "Arquivos de Texto (*.txt)")
         if filepath:
             self.package_file_path.setText(filepath)
+            try:
+                with open(filepath, 'r', encoding='utf-8') as package_file:
+                    filenames = [line.strip() for line in package_file if line.strip()]
+            except Exception as e:
+                QMessageBox.critical(self, "Erro", f"Não foi possível ler o arquivo de pacote:\n{e}")
+                return
+
+            current_message = self.commit_message_input.toPlainText()
+            if not current_message or current_message == self._generated_commit_message:
+                self._generated_commit_message = "Copia Oficial Tortoise -\n\n" + "\n".join(filenames)
+                self.commit_message_input.setPlainText(self._generated_commit_message)
             self._set_action_buttons_enabled(False)
             self.files_table.setRowCount(0)
     
@@ -406,6 +426,11 @@ class MainWindow(QMainWindow):
         _, dest_path, _ = self._get_validated_paths_and_files()
         selected_files = self._get_selected_files_from_table()
         if not dest_path or not selected_files: return
+        self._pending_completion_message = (
+            "Etapa de lock concluída. Consulte o log para ver os arquivos "
+            "bloqueados e os arquivos novos ignorados."
+        )
+        self._task_failed = False
         self._set_buttons_enabled(False)
         self.log_output.clear()
         self.automation_worker.lock_files(dest_path, selected_files)
@@ -414,6 +439,8 @@ class MainWindow(QMainWindow):
         source_path, dest_path, _ = self._get_validated_paths_and_files()
         selected_files = self._get_selected_files_from_table()
         if not all([source_path, dest_path, selected_files]): return
+        self._pending_completion_message = "Arquivos copiados com sucesso."
+        self._task_failed = False
         self._set_buttons_enabled(False)
         self.log_output.clear()
         self.automation_worker.copy_files(source_path, dest_path, selected_files)
@@ -423,6 +450,11 @@ class MainWindow(QMainWindow):
         selected_files = self._get_selected_files_from_table()
         commit_message = self.commit_message_input.toPlainText().strip()
         if not all([dest_path, selected_files]): return
+        self._pending_completion_message = (
+            "Arquivos comitados com sucesso.\n\n"
+            "Agora gere o executável."
+        )
+        self._task_failed = False
         self._set_buttons_enabled(False)
         self.log_output.clear()
         self.automation_worker.commit_files(dest_path, selected_files, commit_message)

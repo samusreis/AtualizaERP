@@ -98,6 +98,7 @@ Para iniciar o programa, execute o arquivo `main.py`:
      2. **Copiar Selecionados** (Cópia local Origem ➔ Destino)
      3. **Commit Selecionados** (`svn commit` com mensagem)
      4. **Liberar Locks** (`svn unlock`)
+   * Ao selecionar um pacote gerado nesta mesma sessão, a mensagem do commit é preenchida com o texto original do editor, preservando a divisão por chamados e componentes. Pacotes antigos ou gerados fora da sessão continuam usando a lista de arquivos como mensagem padrão; em qualquer caso, o campo pode ser editado antes do commit.
    * Antes de bloquear, a aplicação consulta o status do working copy de destino. Arquivos novos (`unversioned`, `added` ou ainda ausentes no destino) são ignorados somente no lock e listados no log. O fluxo para eles é: copiar para o destino, fazer o `Add` e configurar `svn:needs-lock` manualmente pelo TortoiseSVN e, então, incluí-los no commit. Os demais arquivos versionados continuam seguindo o fluxo normal.
    * A cópia preserva os atributos da origem. Se um arquivo já existente no destino estiver somente leitura, a aplicação libera a gravação apenas durante a cópia e, ao concluir, aplica os atributos da origem ao arquivo. A propriedade SVN `svn:needs-lock` não é removida.
    * Se a cópia retornar `Permission denied`, verifique se o lock do arquivo foi concedido e se ele está marcado como somente leitura; arquivos também podem estar abertos por outro programa ou sem permissão de gravação na pasta.

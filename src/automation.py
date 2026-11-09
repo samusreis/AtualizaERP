@@ -324,6 +324,17 @@ class AutomationWorker(QObject):
                 )
             )
         if paths:
+            try:
+                paths = [
+                    self._paths_with_actual_case(
+                        os.path.dirname(path), [os.path.basename(path)]
+                    )[0]
+                    for path in paths
+                ]
+            except (OSError, ValueError) as e:
+                self.task_error.emit("Erro ao localizar arquivos", str(e))
+                self.task_finished.emit()
+                return
             self._run_command("svn", ["lock"] + paths)
         else:
             self.log_message.emit(

@@ -113,6 +113,7 @@ class MainWindow(QMainWindow):
         self._pending_completion_message = None
         self._task_failed = False
         self._generated_commit_message = ""
+        self._commit_messages_by_package = {}
         self.automation_worker.log_message.connect(self.append_to_log)
         self.automation_worker.task_finished.connect(self.on_task_finished)
         self.automation_worker.task_error.connect(self.show_error_message)
@@ -208,7 +209,7 @@ class MainWindow(QMainWindow):
         self.commit_button.clicked.connect(self.run_commit_files)
         layout.addWidget(self.commit_button, 11, 2)
         layout.addWidget(QLabel("Mensagem do Commit:"), 12, 0, 1, 3)
-        self.commit_message_input = QTextEdit(); self.commit_message_input.setFixedHeight(60)
+        self.commit_message_input = QTextEdit(); self.commit_message_input.setFixedHeight(160)
         layout.addWidget(self.commit_message_input, 13, 0, 1, 3)
         self.unlock_button = QPushButton("Passo 7.4: Liberar Locks")
         self.unlock_button.clicked.connect(self.run_unlock_files)
@@ -301,6 +302,8 @@ class MainWindow(QMainWindow):
             with open(filename, 'w', encoding='utf-8') as f:
                 for arquivo in sorted(list(arquivos_para_release)):
                     f.write(f"{arquivo}\n")
+            package_path = os.path.normcase(os.path.abspath(filename))
+            self._commit_messages_by_package[package_path] = full_text.strip()
             QMessageBox.information(self, "Sucesso", f"Arquivo de release gerado com sucesso!\nSalvo como: {filename}")
         except Exception as e:
             QMessageBox.critical(self, "Erro", f"Ocorreu um erro ao salvar o arquivo:\n{e}")
@@ -318,7 +321,11 @@ class MainWindow(QMainWindow):
 
             current_message = self.commit_message_input.toPlainText()
             if not current_message or current_message == self._generated_commit_message:
-                self._generated_commit_message = "Copia Oficial Tortoise -\n\n" + "\n".join(filenames)
+                package_path = os.path.normcase(os.path.abspath(filepath))
+                self._generated_commit_message = self._commit_messages_by_package.get(
+                    package_path,
+                    "Copia Oficial Tortoise -\n\n" + "\n".join(filenames)
+                )
                 self.commit_message_input.setPlainText(self._generated_commit_message)
             self._set_action_buttons_enabled(False)
             self.files_table.setRowCount(0)

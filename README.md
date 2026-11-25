@@ -6,7 +6,7 @@ Este projeto é uma ferramenta de automação desenvolvida em **Python** com int
 
 ## 🛠️ Requisitos do Sistema
 
-* **Python 3.10 64-bit** para gerar o executável
+* **Python 3.10 64-bit** para gerar o executável (o script pode instalá-lo automaticamente)
 * **Apache Subversion (SVN Client)** via linha de comando (`svn.exe`)
 
 ### Dependências Python
@@ -18,9 +18,7 @@ pip install -r requirements.txt
 
 ## Gerar o executável no Windows
 
-Instale o Python 3.10 de 64 bits e execute `build_exe.bat` na pasta do projeto. O script prepara o ambiente `.venv-pyside2`, instala as dependências e gera um executável único, sem janela de console, em:
-
-**https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe Segue instalador 3.10
+Execute `build_exe.bat` na pasta do projeto. Se necessário, o script baixa o instalador oficial do Python 3.10.11 64-bit e o instala para o usuário atual. Também recupera do repositório oficial do projeto os arquivos essenciais que estiverem ausentes, sem sobrescrever arquivos existentes. É necessária conexão com a internet para esses downloads e para instalar as dependências. O script prepara o ambiente `.venv-pyside2` (ou `.venv-pyside2-310` se o ambiente existente for incompatível), instala as dependências e gera um executável único, sem janela de console, em:
 
 ```text
 dist/AssistenteReleaseGuardian.exe
